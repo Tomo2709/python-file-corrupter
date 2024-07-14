@@ -59,8 +59,9 @@ def corruptData(data):
     endRange = int(len(data) * 5/6) # avoid footer
 
     # effectively we have 4/6 of the file to work with, however note these values are based purely on supistition(i have no idea how large file headers are)
-    # for varying amounts of corruption change the range
-    for _ in range(1000):
+    # added proportional scaling to the range of corruption, however feel free to change this if you dont get desired results
+    i = int(len(data) * 0.001)
+    for _ in range(i):
         index = random.randint(startRange, endRange-1)
         byteValue = random.randint(0,255)
         binaryvalue = format(byteValue, "02x")
@@ -77,10 +78,9 @@ def writeToFile(cData, output):
 def main():
     try:
         # create a directory for corrupted files
-        # make sure to change this for your device
+        # directory is now created locally, rather than needing a specific path
         directory = "corruptFiles"
-        parentDir = "C:/Users/shaun/Documents"
-        path = os.path.join(parentDir, directory)
+        path = directory
         os.mkdir(path)
         print("Directory created: ",path)
     except:
