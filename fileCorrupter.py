@@ -60,12 +60,15 @@ def corruptData(data):
 
     # effectively we have 4/6 of the file to work with, however note these values are based purely on supistition(i have no idea how large file headers are)
     # added proportional scaling to the range of corruption, however feel free to change this if you dont get desired results
-    i = int(len(data) * 0.001)
-    for _ in range(i):
+    total = int(len(data) * 4/6)
+    i = int(total * 0.00025) # changed range slightly for faster corruption, now scales to 4/6 of the data rather than the whole thing
+    for bytes in range(i):
         index = random.randint(startRange, endRange-1)
         byteValue = random.randint(0,255)
         binaryvalue = format(byteValue, "02x")
         data = data[:index] + binaryvalue.encode() + data[index+2:]
+        # due to larger files taking forever to corrupt a progress bar is implemented to insure project is still working
+        print(f"\rprogress: {i}: {bytes} bytes", end="")
 
     return data
 
@@ -93,7 +96,7 @@ def main():
     data = collectData(file)
     print("binary data collected")
     cData = corruptData(data)
-    print("data succesffuly corrupted")
+    print("\ndata succesffuly corrupted")
     writeToFile(cData, output)
     print("corrupted file created please check: ",path)
     print("to see the results make sure you rename the file back to its original file format, and also ingore the warnings(trust me)")
