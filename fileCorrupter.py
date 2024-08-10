@@ -54,19 +54,35 @@ def collectData(file):
     return data
 
 # ignores header and footer of the file and randomaly replaces bytes
-def corruptData(data):
-    startRange = int(len(data) * 1/6) # avoid header
-    endRange = int(len(data) * 5/6) # avoid footer
+def corruptData(data): 
+    startRange = int(len(data) * 1/10) # avoid header
+    endRange = int(len(data) * 9/10) # avoid footer
 
-    # effectively we have 4/6 of the file to work with, however note these values are based purely on supistition(i have no idea how large file headers are)
-    # added proportional scaling to the range of corruption, however feel free to change this if you dont get desired results
-    total = int(len(data) * 4/6)
-    i = int(total * 0.00025) # changed range slightly for faster corruption, now scales to 4/6 of the data rather than the whole thing
+    # now lets users decide the level of corruption
+    total = int(len(data))
+    while True:
+        try:
+            i = int(input(f"\nplease enter an integer value for the amount of bytes to be changed out of the total file size({total}): "))
+            if i >= 1000:
+                print("better get comfy becuase we are going to be here a while!")
+            elif i > total:
+                print("you probably should not do that, oh well...")
+            elif i == 0:
+                print("what are you trying to do exactly?")
+            elif i < 0:
+                print("????")
+            break
+        except:
+            print("only integers please!, try again!!")
+
+    # core of it all right here
+    # essentially, at random picks a point of the file, and then randomly generates a new value to replace the old value of that index... repeatedly.
     for bytes in range(i):
         index = random.randint(startRange, endRange-1)
-        byteValue = random.randint(0,255)
-        binaryvalue = format(byteValue, "02x")
+        byteValue = random.randint(0,255)# generate a random interger
+        binaryvalue = format(byteValue, "02x")# then convert to hex
         data = data[:index] + binaryvalue.encode() + data[index+2:]
+
         # due to larger files taking forever to corrupt a progress bar is implemented to insure project is still working
         print(f"\rprogress: {i}: {bytes} bytes", end="")
 
