@@ -24,9 +24,10 @@ def recievefile():
                 else:
                     print("invalid entry")
 
-    return file
+    ext = os.path.splitext(file)[1][1:].strip().lower()
+    return file, ext
 
-# we need an output file to write corrupted data to
+# output file to write corrupted data to (this needs to be taken out and restructured)
 def createOutputFile(path):
     filename = "corrupt"
     filename = os.path.join(path, f"{filename}.bin")
@@ -53,20 +54,17 @@ def collectData(file):
 
     return data
 
-# ignores header and footer of the file and randomaly replaces bytes
+# ignores header of the file and randomly replaces bytes
 def corruptData(data): 
     startRange = int(len(data) * 1/10) # avoid header
-    endRange = int(len(data) * 9/10) # avoid footer
 
-    # now lets users decide the level of corruption
+    # users decide the level of corruption
     total = int(len(data))
     while True:
         try:
             i = int(input(f"\nplease enter an integer value for the amount of bytes to be changed out of the total file size({total}): "))
             if i >= 1000:
-                print("better get comfy becuase we are going to be here a while!")
-            elif i > total:
-                print("you probably should not do that, oh well...")
+                print("This may take a while!")
             elif i == 0:
                 print("what are you trying to do exactly?")
             elif i < 0:
@@ -75,37 +73,51 @@ def corruptData(data):
         except:
             print("only integers please!, try again!!")
 
-    # core of it all right here
-    # essentially, at random picks a point of the file, and then randomly generates a new value to replace the old value of that index... repeatedly.
+    data = bytearray(data)
+
+    # corruption of data
+    # repeatidly picks a point in the file, and then randomly generates a new value to replace the old value of that index 
     for bytes in range(i):
-        index = random.randint(startRange, endRange-1)
-        byteValue = random.randint(0,255)# generate a random interger
-        binaryvalue = format(byteValue, "02x")# then convert to hex
-        data = data[:index] + binaryvalue.encode() + data[index+2:]
+        index = random.randint(startRange, total - 1)
+        data[index] = random.randint(0, 255)
 
         # due to larger files taking forever to corrupt a progress bar is implemented to insure project is still working
-        print(f"\rprogress: {i}: {bytes} bytes", end="")
+        print(f"\rprogress: {i}: {bytes + 1} bytes", end="")
 
     return data
 
-# remember the output file that stores hello world, yeah we write the corrupted data to that
+# write corrupted data to output write
 def writeToFile(cData, output):  
     f = open(output, "wb")
     f.write(cData)  
     f.close()
 
+# auto change file rather than user doing it manually
+def changeFileExtension(ext, output, path):
+    # doesnt work as intended, but does work
+    changedExt = os.path.basename(output)
+    changedExt = changedExt + "." + ext
+    changedExt = os.path.join(path, changedExt)
+
+    # if the file already exists iterate +1
+    i = 0
+    while os.path.exists(changedExt):
+            changedExt = "corrupt"
+            i += 1
+            changedExt = os.path.join(path, f"{changedExt}{i}.{ext}")
+
+    os.rename(output, changedExt)
+
 def main():
     try:
         # create a directory for corrupted files
-        # directory is now created locally, rather than needing a specific path
-        directory = "corruptFiles"
-        path = directory
+        path = "corruptFiles"
         os.mkdir(path)
         print("Directory created: ",path)
     except:
         print("folder likely already exists, proceeding...")
 
-    file = recievefile()
+    file, ext = recievefile()
     print("file found!: ",file)
     output = createOutputFile(path)
     print("created file placeholder")
@@ -114,7 +126,6 @@ def main():
     cData = corruptData(data)
     print("\ndata succesffuly corrupted")
     writeToFile(cData, output)
-    print("corrupted file created please check: ",path)
-    print("to see the results make sure you rename the file back to its original file format, and also ingore the warnings(trust me)")
-
+    changeFileExtension(ext, output, path)
+    print("corrupted file created please check: ", path)
 main()  
